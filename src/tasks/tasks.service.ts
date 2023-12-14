@@ -5,6 +5,7 @@ import { CreateTaskDto } from './dto/create-task.dto';
 import { TasksRepository } from './tasks.repository';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Task } from './task.entity';
+import { User } from 'src/auth/user.entity';
 
 @Injectable()
 export class TasksService {
@@ -13,12 +14,12 @@ export class TasksService {
     private tasksRepository: TasksRepository,
   ) {}
 
-  async getTasks(filterDto): Promise<Task[]> {
-    return this.tasksRepository.getTasks(filterDto);
+  async getTasks(filterDto, user: User): Promise<Task[]> {
+    return this.tasksRepository.getTasks(filterDto, user);
   }
 
-  async getTasksById(id: string): Promise<Task> {
-    const found = await this.tasksRepository.findOne({ id });
+  async getTasksById(id: string, user: User): Promise<Task> {
+    const found = await this.tasksRepository.findOne({ where: { id, user } });
 
     if (!found) {
       throw new NotFoundException(`Task with id ${id} not found.`);
@@ -27,12 +28,12 @@ export class TasksService {
     return found;
   }
 
-  createTask(createTaskDto: CreateTaskDto): Promise<Task> {
-    return this.tasksRepository.createTask(createTaskDto);
+  createTask(createTaskDto: CreateTaskDto, user: User): Promise<Task> {
+    return this.tasksRepository.createTask(createTaskDto, user);
   }
 
-  async deleteTask(id: string): Promise<void> {
-    const deleteResponse = await this.tasksRepository.delete(id);
+  async deleteTask(id: string, user: User): Promise<void> {
+    const deleteResponse = await this.tasksRepository.delete({ id, user });
     if (deleteResponse.affected === 0) {
       throw new NotFoundException(`Task with id ${id} not found.`);
     }
@@ -41,8 +42,9 @@ export class TasksService {
   async updateTaskStatus(
     id: string,
     updateTaskStatus: TaskStatus,
+    user: User,
   ): Promise<Task> {
-    const taskToUpdate = await this.getTasksById(id);
+    const taskToUpdate = await this.getTasksById(id, user);
     taskToUpdate.status = updateTaskStatus;
     this.tasksRepository.save(taskToUpdate);
     return taskToUpdate;
