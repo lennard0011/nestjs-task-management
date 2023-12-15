@@ -5,7 +5,7 @@ import { CreateTaskDto } from './dto/create-task.dto';
 import { TasksRepository } from './tasks.repository';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Task } from './task.entity';
-import { User } from 'src/auth/user.entity';
+import { User } from '../auth/user.entity';
 
 @Injectable()
 export class TasksService {
@@ -18,7 +18,7 @@ export class TasksService {
     return this.tasksRepository.getTasks(filterDto, user);
   }
 
-  async getTasksById(id: string, user: User): Promise<Task> {
+  async getTaskById(id: string, user: User): Promise<Task> {
     const found = await this.tasksRepository.findOne({ where: { id, user } });
 
     if (!found) {
@@ -44,7 +44,7 @@ export class TasksService {
     updateTaskStatus: TaskStatus,
     user: User,
   ): Promise<Task> {
-    const taskToUpdate = await this.getTasksById(id, user);
+    const taskToUpdate = await this.getTaskById(id, user);
     taskToUpdate.status = updateTaskStatus;
     this.tasksRepository.save(taskToUpdate);
     return taskToUpdate;
